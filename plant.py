@@ -63,13 +63,19 @@ class plant():
                 irrigationTime=irrigationTime+1
             self.output.write(self.gpioOutputPort,False)
             absorbWaterTime=0
-            while absorbWaterTime<10:
+            while absorbWaterTime<60:
                 self.status='Absorbing'
                 self.logStatusChange()
                 self.printValues()
                 time.sleep(1)
                 absorbWaterTime=absorbWaterTime+1
                 
+    def wait(self):
+            plant.output.write(16,True)
+            time.sleep(1)
+            plant.output.write(16,False)
+            time.sleep(1)
+            
     def run(self):
             self.status='Reading'
             self.printValues()
@@ -86,4 +92,6 @@ if __name__ == "__main__":
     while True:
         for plant in plants:
             plant.run()
+            plant.wait()
+            
     
