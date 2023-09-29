@@ -27,7 +27,7 @@ class plant():
         self.dryVoltage=2.85
         self.saturatedVoltage=1.3
         self.previousMoisture=0
-        self.state='Start'
+        self.status='Reading'
         
     def calculateMoisture(self):
         return round((((self.saturatedVoltage-self.channel.voltage)/(self.dryVoltage-self.saturatedVoltage))*100)+100,0)
@@ -69,6 +69,8 @@ class plant():
                 self.printValues()
                 time.sleep(1)
                 absorbWaterTime=absorbWaterTime+1
+        else:
+            self.status='Reading'
                 
     def wait(self):
             plant.output.write(16,True)
@@ -77,10 +79,9 @@ class plant():
             time.sleep(1)
             
     def run(self):
-            self.status='Reading'
             self.printValues()
             self.logStatusChange()
-            if self.calculateMoisture()<self.dryLevel:
+            if self.calculateMoisture()<self.dryLevel or self.status=='Absorbing':
                 self.irrigate()
     
         
