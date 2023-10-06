@@ -35,7 +35,7 @@ class plant():
     
         
     def printValues(self):
-        print(self.name+' Status: '+str(self.status))
+        print(str(self.status))
         print(self.name+' Moisture: '+ str(self.calculateMoisture())+'%')
         print(self.name+' Minutes at state: '+str(self.status.getTimeElapsed()))
         
@@ -43,17 +43,18 @@ class plant():
         return datetime.now()
         
     def logMoistureChange(self):
-        if(abs(self.calculateMoisture()-self.previousMoisture)>=2):
+        currentMoisture=self.calculateMoisture()
+        if(abs(currentMoisture-self.previousMoisture)>=2):
             file1 = open('/home/zuldijin/Desktop/plant_'+self.name+'.log', 'a+')
             file1.write(str(self.now())+'\tPlant: '+self.name
-            +'\tStatus: '+str(self.status)
+            +str(self.status)
             +'\tADC Voltage: '+ str(self.channel.voltage)
-            +'V\tMoisture: '+ str(self.calculateMoisture())+'%\n')
+            +'V\tMoisture: '+ str(currentMoisture)+'%\n')
             file1.close()
-            self.previousMoisture=self.calculateMoisture()
+            self.previousMoisture=currentMoisture
             
     def irrigate(self):
-        if self.status.state==State.Absorbing and self.status.getTimeElapsed()<=5:
+        if self.status.state==State.Absorbing and self.status.getTimeElapsed()<5:
             pass
         elif self.calculateMoisture()<self.wetLevel:
             self.output.write(self.gpioOutputPort,True)
@@ -92,7 +93,7 @@ class Status():
     def getTimeElapsed(self):
         return int((datetime.now()-self.time).total_seconds() / 60)
     def __str__(self):
-        return self.state.name
+        return '\tStatus: '+self.state.name+' time at state: '+str(self.getTimeElapsed())
         
 class State(Enum):
     Reading = 1
