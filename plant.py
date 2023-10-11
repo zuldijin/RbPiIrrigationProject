@@ -25,7 +25,7 @@ class plant():
         self.output = pigpio.pi()
         self.output.set_mode(gpioOutputPort, pigpio.OUTPUT)
         self.output.write(gpioOutputPort,False)
-        self.dryVoltage=3
+        self.dryVoltage=2.85
         self.saturatedVoltage=1.3
         self.previousMoisture=0
         self.status=Status()
@@ -47,9 +47,9 @@ class plant():
     
     def logMoistureChange(self):
         currentMoisture=self.calculateMoisture()
-        if((abs(currentMoisture-self.previousMoisture)>=2
-            and self.getTimeElapsedInsecods()>=60)
-            or self.previousMoisture==0):
+        if((abs(currentMoisture-self.previousMoisture)>=1 and self.getTimeElapsedInsecods()>=60)
+            or self.previousMoisture==0
+            or self.status.hasChanged()):
             file1 = open('/home/zuldijin/Desktop/plant_'+self.name+'.log', 'a+')
             file1.write(str(self.now())+'\tPlant: '+self.name
             +'\t'+str(self.status)
@@ -92,8 +92,12 @@ class plant():
 class Status():
     def __init__(self):
         self.state=State.Reading
+        self.previousState=State.Reading
         self.time=datetime.now()
+    def hasChanged(self):
+        return self.previousState!=self.state
     def changeStatus(self, state):
+        self.previousState=self.state
         self.state=state
         self.time=datetime.now()
     def getTimeElapsed(self):
@@ -107,10 +111,10 @@ class State(Enum):
     Irrigating = 3
         
 if __name__ == "__main__":
-    plants=[plant("Mint",MCP.P0,18,35,80), 
+    plants=[plant("Mint",MCP.P0,18,40,80), 
             plant("Bamboo",MCP.P1,23,30,80),
             plant("sequoia",MCP.P2,24,50,70),
-            plant("Delonix Regia",MCP.P3,25,50,80)]
+            plant("Delonix Regia",MCP.P3,25,50,70)]
     while True:
         for plant in plants:
             plant.run()
