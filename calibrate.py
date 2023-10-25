@@ -12,7 +12,7 @@ from enum import Enum
 from adafruit_mcp3xxx.analog_in import AnalogIn
 
 if __name__ == "__main__":
-    adc_channel=MCP.P2
+    adc_channel=MCP.P0
     spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
     cs = digitalio.DigitalInOut(board.D5)
     mcp = MCP.MCP3008(spi, cs)
@@ -43,6 +43,8 @@ if __name__ == "__main__":
         return sum_voltages/(len(voltages)+1)
     answer='n'
     soil_volume = int(input("Enter Soil Volume in ml:"))
+    if soil_volume==0:
+        raise Exception("soil cannot be 0 , you need soil to meassure soil.... just saying")
     voltages=[]
     water_added=[]
     soil_saturation=[]
@@ -60,7 +62,9 @@ if __name__ == "__main__":
         water_sum+=wtr
         soil_saturation.append(water_sum/soil_volume)
     plt.scatter(soil_saturation, voltages) 
-    plt.show() 
+    plt.show()
+
+    
     
         
         
