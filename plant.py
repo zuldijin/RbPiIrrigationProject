@@ -33,13 +33,14 @@ class Plant:
         GPIO.output(gpio_output_port,GPIO.LOW)
         GPIO.setup(16,GPIO.OUT)
         self.soil=soil
-        self.previous_moisture = 0
+        self.previous_moisture = [0,0,0]
+        self.previous_moisture_index=0
         self.status = Status()
         self.last_log_time = datetime.now()
 
     def calculate_moisture(self):
         average_voltage=self.get_volatge_avarage_for_x_seconds(1)
-        return math.trunc((((self.soil.get_saturated_voltage() - round(average_voltage, 2)) / (self.soil.get_dry_voltage() - self.soil.get_saturated_voltage())) * 100) + 100)
+        return int(str(math.trunc((((self.soil.get_saturated_voltage() - round(average_voltage, 2)) / (self.soil.get_dry_voltage() - self.soil.get_saturated_voltage())) * 100) + 100)))
 
     def print_values(self):
         print(f"{self.name} Voltage: {self.channel.voltage}v")
@@ -62,18 +63,21 @@ class Plant:
         
     def log_moisture_change(self):
         current_moisture=self.calculate_moisture() 
-        if (
-            (abs(current_moisture - self.previous_moisture)>1
+        if ((current_moisture not in self.previous_moisture
             and self.get_time_elapsed_in_seconds(self.last_log_time) >= 60)
-            or self.previous_moisture == 0
+            or sum(self.previous_moisture) == 0
             or self.status.has_changed()
         ):
             with open(f"/home/zuldijin/Desktop/plant_{self.name}.log", "a+") as file:
                 file.write(
                     f"{datetime.now()}\tPlant: {self.name}\t{self.status}\tADC Voltage: {self.channel.voltage}V\tMoisture: {current_moisture}%\n"
                 )
-            self.previous_moisture = current_moisture
+            self.previous_moisture[self.previous_moisture_index]=current_moisture
+            self.previous_moisture_index+=1
+            if(self.previous_moisture_index==3):
+                self.previous_moisture_index=0
             self.last_log_time = datetime.now()
+        print(self.previous_moisture)
 
     def pump(self,pump_time):
         GPIO.output(self.gpio_output_port,GPIO.HIGH)
@@ -88,7 +92,7 @@ class Plant:
         GPIO.output(self.gpio_output_port,GPIO.LOW)
         
     def irrigate(self):
-        if self.status.state == State.Absorbing and self.status.get_time_elapsed() < 5:
+        if self.status.state == State.Absorbing and self.status.get_time_elapsed() < 10:
             pass
         elif self.calculate_moisture() < self.wet_level:
             print("Irrigating for 4 seconds")
@@ -112,7 +116,10 @@ class Status:
         self.time = datetime.now()
 
     def has_changed(self):
-        return self.previous_state != self.state
+        is_changed=self.previous_state != self.state
+        if is_changed:
+            self.previous_state=self.state
+        return is_changed
 
     def change_status(self, state):
         self.previous_state = self.state
