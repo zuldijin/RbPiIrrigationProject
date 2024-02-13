@@ -11,7 +11,7 @@ from adafruit_mcp3xxx.analog_in import AnalogIn
 
 GPIO.cleanup()
 RPI_Pin = 18                        # define the RPI GPIO Pin we will use with PWM (PWM)
-RPI_Freq = 100                      # define the frequency in Hz (500Hz)
+RPI_Freq = 500                      # define the frequency in Hz (500Hz)
 GPIO.setmode(GPIO.BCM)              # set actual GPIO BCM Numbers
 GPIO.setup(RPI_Pin, GPIO.OUT)       # set RPI_PIN as OUTPUT mode
 GPIO.output(RPI_Pin, GPIO.LOW)          # set RPI_PIN LOW to at the start
@@ -82,7 +82,7 @@ class Plant:
     def pump(self,pump_time):
         GPIO.output(self.gpio_output_port,GPIO.HIGH)
         pwmobj.ChangeDutyCycle(100)
-        time.sleep(0.3)
+        time.sleep(0.2)
         irrigation_time=0
         while irrigation_time < pump_time:
                 pwmobj.ChangeDutyCycle(self.duty) 
@@ -98,7 +98,7 @@ class Plant:
             print("Irrigating for 4 seconds")
             irrigation_time = 0
             self.status.change_status(State.Irrigating)
-            self.pump(4)
+            self.pump(5)
             self.status.change_status(State.Absorbing)
         else:
             self.status.change_status(State.Reading)
@@ -153,13 +153,15 @@ if __name__ == "__main__":
     pwmobj = GPIO.PWM(RPI_Pin, RPI_Freq)# Initialise instance and set Frequency
     pwmobj.start(0)
     flower_soil=Soil("Flower Soil",2.15,1.15)
-    gravel=Soil("Gravel",2.75,1.50)
-    flower_gravel=Soil("50 flower-50 gravelblend",2.80,1.38)
+    gravel=Soil("Gravel",2.75,1.30)
+    flower_gravel=Soil("50 flower-50 gravelblend",2.21,1.24)
+    flower_gravel_third=Soil("75 flower-25 gravelblend",1.75,1.0635)
     plants = [
-        Plant("Mint", MCP.P0, 6, 60, 80,flower_soil,70),
-        Plant("Bamboo", MCP.P1, 13, 50, 80,flower_soil,70),
-        Plant("Sequoia", MCP.P2, 19, 50, 80,gravel,50),
+        Plant("Mint", MCP.P0, 6, 65, 80,flower_soil,80),
+        Plant("Bamboo", MCP.P1, 13, 50, 70,flower_gravel,70),
+        Plant("Sequoia", MCP.P2, 19, 40, 70,gravel,50),
         Plant("Delonix Regia", MCP.P3, 26, 50, 70,flower_gravel,50),
+        Plant("Avocado", MCP.P4, 20, 65, 80,flower_gravel_third,30)
     ]
 
     while True:
